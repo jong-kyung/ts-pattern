@@ -6,7 +6,7 @@ abstract class DrawingBoard {
   }
 
   abstract initialize(): void;
-  abstract initializeMenu(): void;
+
   static getInstance() {}
 }
 

@@ -1,24 +1,14 @@
-import IEDrawingBoard from "./IEDrawingBoard";
-import AbstractFactory from "./AbstractFactory";
-import ChromeDrawingBoard from "./ChromeDrawingBoard";
-
-class ChromeDrawingBoardFactory extends AbstractFactory {
-  static override createDrawingBoard() {
-    return ChromeDrawingBoard.getInstance();
-  }
-}
-
-class IEDrawingBoardFactory extends AbstractFactory {
-  static override createDrawingBoard() {
-    return IEDrawingBoard.getInstance();
-  }
-}
+import { ChromeDrawingBoardFactory } from "./DrawingBoardFactory";
 
 // 팩토리 메서드 패턴 사용
 function main() {
   const drawingBoard = ChromeDrawingBoardFactory.createDrawingBoard();
+  const drawingBoardMenu = ChromeDrawingBoardFactory.createDrawingBoardMenu(drawingBoard);
+  const drawingBoardHistory = ChromeDrawingBoardFactory.createDrawingBoardHistory(drawingBoard);
+
   drawingBoard.initialize();
-  drawingBoard.initializeMenu();
+  drawingBoardMenu.initialize();
+  drawingBoardHistory.initialize();
 }
 
 main();
