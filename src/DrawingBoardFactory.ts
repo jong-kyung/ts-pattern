@@ -8,7 +8,7 @@ export abstract class AbstractFactory {
   static createDrawingBoard() {
     throw new Error("Method not implemented.");
   }
-  static createDrawingBoardMenu(drawingBoard: DrawingBoard) {
+  static createDrawingBoardMenu(drawingBoard: DrawingBoard, dom: HTMLElement) {
     throw new Error("Method not implemented.");
   }
 
@@ -22,8 +22,8 @@ export class ChromeDrawingBoardFactory extends AbstractFactory {
     return ChromeDrawingBoard.getInstance();
   }
 
-  static override createDrawingBoardMenu(drawingBoard: ChromeDrawingBoard) {
-    return ChromeDrawingBoardMenu.getInstance(drawingBoard);
+  static override createDrawingBoardMenu(drawingBoard: ChromeDrawingBoard, dom: HTMLElement) {
+    return ChromeDrawingBoardMenu.getInstance(drawingBoard, dom);
   }
 
   static override createDrawingBoardHistory(drawingBoard: ChromeDrawingBoard) {
@@ -36,8 +36,8 @@ export class IEDrawingBoardFactory extends AbstractFactory {
     return IEDrawingBoard.getInstance();
   }
 
-  static override createDrawingBoardMenu(drawingBoard: IEDrawingBoard) {
-    return IEDrawingBoardMenu.getInstance(drawingBoard);
+  static override createDrawingBoardMenu(drawingBoard: IEDrawingBoard, dom: HTMLElement) {
+    return IEDrawingBoardMenu.getInstance(drawingBoard, dom);
   }
 
   static override createDrawingBoardHistory(drawingBoard: IEDrawingBoard) {

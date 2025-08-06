@@ -1,61 +1,53 @@
-interface Btn {
-  name: string;
-  type: string;
-  onClick?: () => void;
-  active: boolean;
+import type { DrawingBoardMenu } from "./DrawingBoardMenu";
+
+abstract class DrawingBoardMenuElementBuilder {
+  btn!: DrawingBoardMenuBtn;
+  constructor() {}
+
+  build() {
+    return this.btn;
+  }
 }
 
-interface Input {
-  name: string;
-  type: string;
-  onChange?: () => void;
-  value: string | number;
+export abstract class DrawingBoardMenuElement {
+  protected menu: DrawingBoardMenu;
+  protected name: string;
+
+  protected constructor(menu: DrawingBoardMenu, name: string) {
+    this.menu = menu;
+    this.name = name;
+  }
+
+  abstract draw(): void;
 }
 
-class DrawingBoardMenuBtn {
-  private name: string;
-  private type: string;
-  private onClick?: () => void;
+export class DrawingBoardMenuInput extends DrawingBoardMenuElement {
   private onChange?: () => void;
-  private active?: boolean;
   private value?: string | number;
 
-  private constructor(
-    name: string,
-    type: string,
-    onClick?: () => void,
-    onChange?: () => void,
-    active?: boolean,
-    value?: string | number
-  ) {
-    this.name = name;
-    this.type = type;
-    this.onClick = onClick;
+  private constructor(menu: DrawingBoardMenu, name: string, onChange?: () => void, value?: string | number) {
+    super(menu, name);
     this.onChange = onChange;
-    this.active = active;
     this.value = value;
   }
 
+  draw() {
+    const input = document.createElement("input");
+    input.title = this.name;
+    input.type = "color";
+
+    if (this.onChange) {
+      input.addEventListener("change", this.onChange.bind(this));
+    }
+    this.menu.dom.append(input);
+  }
+
   // Builder 패턴
-  static Builder = class DrawingBoardMenuBtnBuilder {
-    btn: DrawingBoardMenuBtn;
-    constructor(name: string, type: string) {
-      this.btn = new DrawingBoardMenuBtn(name, type);
-    }
-
-    setName(name: string) {
-      this.btn.name = name;
-      return this;
-    }
-
-    setType(type: string) {
-      this.btn.type = type;
-      return this;
-    }
-
-    setOnClick(onClick: () => void) {
-      this.btn.onClick = onClick;
-      return this;
+  static Builder = class DrawingBoardMenuInputBuilder extends DrawingBoardMenuElementBuilder {
+    override btn: DrawingBoardMenuInput;
+    constructor(menu: DrawingBoardMenu, name: string) {
+      super();
+      this.btn = new DrawingBoardMenuInput(menu, name);
     }
 
     setOnChange(onChange: () => void) {
@@ -63,23 +55,47 @@ class DrawingBoardMenuBtn {
       return this;
     }
 
-    setActive(active: boolean) {
-      this.btn.active = active;
-      return this;
-    }
-
     setValue(value: string | number) {
       this.btn.value = value;
       return this;
     }
+  };
+}
+export class DrawingBoardMenuBtn extends DrawingBoardMenuElement {
+  private onClick?: () => void;
+  private active?: boolean;
 
-    build() {
-      return this.btn;
+  private constructor(menu: DrawingBoardMenu, name: string, onClick?: () => void, active?: boolean) {
+    super(menu, name);
+    this.onClick = onClick;
+    this.active = active;
+  }
+
+  draw() {
+    const button = document.createElement("button");
+    button.textContent = this.name;
+    if (this.onClick) {
+      button.addEventListener("click", this.onClick.bind(this));
+    }
+    this.menu.dom.append(button);
+  }
+
+  // Builder 패턴
+  static Builder = class DrawingBoardMenuBtnBuilder extends DrawingBoardMenuElementBuilder {
+    override btn: DrawingBoardMenuBtn;
+    constructor(menu: DrawingBoardMenu, name: string) {
+      super();
+      this.btn = new DrawingBoardMenuBtn(menu, name);
+    }
+
+    setOnClick(onClick: () => void) {
+      this.btn.onClick = onClick;
+      return this;
+    }
+
+    setActive(active: boolean) {
+      this.btn.active = active;
+      return this;
     }
   };
 }
-
-const backBtn = new DrawingBoardMenuBtn.Builder("Back", "button")
-  .setOnClick(() => {})
-  .setActive(false)
-  .build();
