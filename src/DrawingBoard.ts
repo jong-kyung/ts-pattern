@@ -17,6 +17,7 @@ export abstract class DrawingBoard {
   mode!: Mode;
   color: string;
   active: boolean;
+  saveStrategy!: () => void;
 
   protected constructor(canvas: HTMLElement | null, factory: typeof AbstractFactory) {
     if (!canvas || !(canvas instanceof HTMLCanvasElement)) {
@@ -26,6 +27,43 @@ export abstract class DrawingBoard {
     this.ctx = this.canvas.getContext("2d")!;
     this.color = "#000";
     this.active = false;
+    this.setSaveStrategy("png");
+  }
+
+  setSaveStrategy(imageType: "png" | "jpg" | "webp" | "avif" | "gif" | "pdf") {
+    switch (imageType) {
+      case "png":
+        // 부모에 대한 참조를 갖고 있지 않아야 strategy 패턴, 참조를 넣게되면 state 패턴으로 변질 될 수 있음
+        this.saveStrategy = () => {
+          const a = document.createElement("a");
+          a.download = "drawing.png";
+          const dataURL = this.canvas.toDataURL("image/png");
+          let url = dataURL.replace(/^data:image\/png/, "data:application/octet-stream");
+          a.href = url;
+          a.click();
+        };
+        break;
+      case "jpg":
+        this.saveStrategy = () => {
+          const a = document.createElement("a");
+          a.download = "drawing.jpg";
+          const dataURL = this.canvas.toDataURL("image/jpeg");
+          let url = dataURL.replace(/^data:image\/jpeg/, "data:application/octet-stream");
+          a.href = url;
+          a.click();
+        };
+        break;
+      case "webp":
+        this.saveStrategy = () => {
+          const a = document.createElement("a");
+          a.download = "drawing.webp";
+          const dataURL = this.canvas.toDataURL("image/webp");
+          let url = dataURL.replace(/^data:image\/webp/, "data:application/octet-stream");
+          a.href = url;
+          a.click();
+        };
+        break;
+    }
   }
 
   setMode(mode: DrawingBoardMode) {

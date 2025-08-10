@@ -8,6 +8,7 @@ import {
   PenSelectCommand,
   PipetteSelectCommand,
   RectangleSelectCommand,
+  SaveCommand,
   type Command,
 } from "./commands";
 
@@ -90,6 +91,10 @@ export class ChromeDrawingBoardMenu extends DrawingBoardMenu {
     this.drawingBoard.setMode("pipette");
   }
 
+  onSave() {
+    this.executeCommand(new SaveCommand(this.drawingBoard));
+  }
+
   drawButtonByType(type: BtnType) {
     switch (type) {
       case "back": {
@@ -147,6 +152,12 @@ export class ChromeDrawingBoardMenu extends DrawingBoardMenu {
 
       case "rectangle": {
         const btn = new DrawingBoardMenuBtn.Builder(this, "Rectangle", type).setOnClick(this.onClickRectangle).build();
+        btn.draw();
+        return btn;
+      }
+
+      case "save": {
+        const btn = new DrawingBoardMenuBtn.Builder(this, "Save", type).setOnClick(this.onSave.bind(this)).build();
         btn.draw();
         return btn;
       }

@@ -104,3 +104,18 @@ export class PipetteSelectCommand extends Command {
     this.drawingBoard.menu.setActiveButton("pipette");
   }
 }
+
+export class SaveCommand extends Command {
+  name = "save";
+  drawingBoard: DrawingBoard;
+
+  constructor(drawingBoard: DrawingBoard) {
+    super();
+    this.drawingBoard = drawingBoard;
+  }
+
+  override execute(): void {
+    // Strategy Pattern
+    this.drawingBoard.saveStrategy();
+  }
+}
