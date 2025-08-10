@@ -31,59 +31,82 @@ export class IEDrawingBoardMenu extends DrawingBoardMenu {
   }
 }
 
+// 커맨드 패턴, 다양한 명령을 하나의 객체로 통합
+abstract class Command {
+  abstract execute(): void;
+}
+class BackCommand extends Command {
+  name = "back";
+
+  // Receiver 역할
+  override execute(): void {}
+}
+
 type BtnType = "pen" | "circle" | "rectangle" | "eraser" | "back" | "forward" | "save" | "pipette" | "color";
 export class ChromeDrawingBoardMenu extends DrawingBoardMenu {
   static instance: ChromeDrawingBoardMenu;
 
   override initialize(types: BtnType[]): void {
     types.forEach(this.drawButtonByType.bind(this));
+    document.addEventListener("keyup", this.onClickBack);
   }
+
+  // Invoker 역할
+  executeCommand(command: BackCommand) {
+    command.execute();
+  }
+
+  onClickBack() {
+    this.executeCommand(new BackCommand());
+  }
+
+  onClickPen() {}
 
   drawButtonByType(type: BtnType) {
     switch (type) {
       case "back": {
-        const btn = new DrawingBoardMenuBtn.Builder(this, "Back").build();
+        const btn = new DrawingBoardMenuBtn.Builder(this, "Back").setOnClick(() => {}).build();
         btn.draw();
         return btn;
       }
       case "forward": {
-        const btn = new DrawingBoardMenuBtn.Builder(this, "Forward").build();
+        const btn = new DrawingBoardMenuBtn.Builder(this, "Forward").setOnClick(() => {}).build();
         btn.draw();
         return btn;
       }
 
       case "color": {
-        const btn = new DrawingBoardMenuInput.Builder(this, "Color").build();
+        const btn = new DrawingBoardMenuInput.Builder(this, "Color").setOnChange(() => {}).build();
         btn.draw();
         return btn;
       }
 
       case "pipette": {
-        const btn = new DrawingBoardMenuBtn.Builder(this, "Pipette").build();
+        const btn = new DrawingBoardMenuBtn.Builder(this, "Pipette").setOnClick(() => {}).build();
         btn.draw();
         return btn;
       }
 
       case "eraser": {
-        const btn = new DrawingBoardMenuBtn.Builder(this, "Eraser").build();
+        const btn = new DrawingBoardMenuBtn.Builder(this, "Eraser").setOnClick(() => {}).build();
         btn.draw();
         return btn;
       }
 
       case "pen": {
-        const btn = new DrawingBoardMenuBtn.Builder(this, "Pen").build();
+        const btn = new DrawingBoardMenuBtn.Builder(this, "Pen").setOnClick(() => {}).build();
         btn.draw();
         return btn;
       }
 
       case "circle": {
-        const btn = new DrawingBoardMenuBtn.Builder(this, "Circle").build();
+        const btn = new DrawingBoardMenuBtn.Builder(this, "Circle").setOnClick(() => {}).build();
         btn.draw();
         return btn;
       }
 
       case "rectangle": {
-        const btn = new DrawingBoardMenuBtn.Builder(this, "Rectangle").build();
+        const btn = new DrawingBoardMenuBtn.Builder(this, "Rectangle").setOnClick(() => {}).build();
         btn.draw();
         return btn;
       }
