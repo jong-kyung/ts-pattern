@@ -1,8 +1,7 @@
-import type DrawingBoard from "./AbstractDrawingBoard";
-import ChromeDrawingBoard from "./ChromeDrawingBoard";
+import { ChromeDrawingBoard, IEDrawingBoard, type DrawingBoard } from "./DrawingBoard";
+
 import { ChromeDrawingBoardHistory, IEDrawingBoardHistory } from "./DrawingBoardHistory";
 import { ChromeDrawingBoardMenu, IEDrawingBoardMenu } from "./DrawingBoardMenu";
-import IEDrawingBoard from "./IEDrawingBoard";
 
 export abstract class AbstractFactory {
   static createDrawingBoard() {

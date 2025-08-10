@@ -1,6 +1,4 @@
-import type DrawingBoard from "./AbstractDrawingBoard";
-import type ChromeDrawingBoard from "./ChromeDrawingBoard";
-import type IEDrawingBoard from "./IEDrawingBoard";
+import type { ChromeDrawingBoard, DrawingBoard, IEDrawingBoard } from "./DrawingBoard";
 
 interface Cloneable {
   clone(): Cloneable;
@@ -17,14 +15,21 @@ export abstract class DrawingBoardHistory {
   drawingBoard: DrawingBoard;
   stack: HistoryStack;
 
-  getStack() {
-    return this.stack.clone();
-  }
-
   protected constructor(drawingBoard: DrawingBoard) {
     this.drawingBoard = drawingBoard;
     // 프로토타입 패턴 (자바스크립트의 프로토타입과는 다름)
     this.stack = new HistoryStack();
+  }
+
+  abstract undo(): void;
+  abstract redo(): void;
+
+  getStack() {
+    return this.stack.clone();
+  }
+
+  setStack(stack: HistoryStack) {
+    this.stack = stack.clone() as HistoryStack;
   }
 
   abstract initialize(): void;
@@ -43,6 +48,8 @@ export class IEDrawingBoardHistory extends DrawingBoardHistory {
     }
     return this.instance;
   }
+  override undo(): void {}
+  override redo(): void {}
 }
 
 export class ChromeDrawingBoardHistory extends DrawingBoardHistory {
@@ -56,4 +63,7 @@ export class ChromeDrawingBoardHistory extends DrawingBoardHistory {
     }
     return this.instance;
   }
+
+  override undo(): void {}
+  override redo(): void {}
 }

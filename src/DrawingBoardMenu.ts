@@ -1,8 +1,17 @@
-import type DrawingBoard from "./AbstractDrawingBoard";
-import type ChromeDrawingBoard from "./ChromeDrawingBoard";
-import { DrawingBoardMenuBtn, DrawingBoardMenuInput } from "./DrawingBoardMenuBtn";
+import type { ChromeDrawingBoard, DrawingBoardMode, IEDrawingBoard } from "./DrawingBoard";
+import type { DrawingBoard } from "./DrawingBoard";
 
-import type IEDrawingBoard from "./IEDrawingBoard";
+import {
+  BackCommand,
+  CircleSelectCommand,
+  EraserSelectCommand,
+  PenSelectCommand,
+  PipetteSelectCommand,
+  RectangleSelectCommand,
+  type Command,
+} from "./commands";
+
+import { DrawingBoardMenuBtn, DrawingBoardMenuInput } from "./DrawingBoardMenuBtn";
 
 export abstract class DrawingBoardMenu {
   drawingBoard: DrawingBoard;
@@ -11,6 +20,12 @@ export abstract class DrawingBoardMenu {
   protected constructor(drawingBoard: DrawingBoard, dom: HTMLElement) {
     this.drawingBoard = drawingBoard;
     this.dom = dom;
+  }
+
+  setActiveButton(type: DrawingBoardMode): void {
+    document.querySelector(".active")?.classList.remove("active");
+    document.querySelector(`#${type}-btn`)?.classList.add("active");
+    this.drawingBoard.setMode(type);
   }
 
   abstract initialize(types: BtnType[]): void;
@@ -23,6 +38,8 @@ export class IEDrawingBoardMenu extends DrawingBoardMenu {
 
   override initialize(types: BtnType[]): void {}
 
+  override setActiveButton(type: DrawingBoardMode): void {}
+
   static override getInstance(drawingBoard: IEDrawingBoard, dom: HTMLElement): IEDrawingBoardMenu {
     if (!this.instance) {
       this.instance = new IEDrawingBoardMenu(drawingBoard, dom);
@@ -31,82 +48,99 @@ export class IEDrawingBoardMenu extends DrawingBoardMenu {
   }
 }
 
-// 커맨드 패턴, 다양한 명령을 하나의 객체로 통합
-abstract class Command {
-  abstract execute(): void;
-}
-class BackCommand extends Command {
-  name = "back";
+export type BtnType = "pen" | "circle" | "rectangle" | "eraser" | "back" | "forward" | "save" | "pipette" | "color";
 
-  // Receiver 역할
-  override execute(): void {}
-}
-
-type BtnType = "pen" | "circle" | "rectangle" | "eraser" | "back" | "forward" | "save" | "pipette" | "color";
 export class ChromeDrawingBoardMenu extends DrawingBoardMenu {
   static instance: ChromeDrawingBoardMenu;
 
   override initialize(types: BtnType[]): void {
     types.forEach(this.drawButtonByType.bind(this));
-    document.addEventListener("keyup", this.onClickBack);
+    this.setActiveButton("pen"); // 기본 모드 설정
   }
 
   // Invoker 역할
-  executeCommand(command: BackCommand) {
+  executeCommand(command: Command) {
+    // Invoker 명령을 실행
     command.execute();
   }
 
   onClickBack() {
-    this.executeCommand(new BackCommand());
+    this.executeCommand(new BackCommand(this.drawingBoard.history));
   }
 
-  onClickPen() {}
+  onClickPen() {
+    const command = new PenSelectCommand(this.drawingBoard);
+    this.executeCommand(command);
+    this.drawingBoard.history.stack.push(command);
+  }
+
+  onClickEraser() {
+    this.executeCommand(new EraserSelectCommand(this.drawingBoard));
+  }
+
+  onClickCircle() {
+    this.executeCommand(new CircleSelectCommand(this.drawingBoard));
+  }
+
+  onClickRectangle() {
+    this.executeCommand(new RectangleSelectCommand(this.drawingBoard));
+  }
+
+  onClickPipette() {
+    this.executeCommand(new PipetteSelectCommand(this.drawingBoard));
+  }
 
   drawButtonByType(type: BtnType) {
     switch (type) {
       case "back": {
-        const btn = new DrawingBoardMenuBtn.Builder(this, "Back").setOnClick(() => {}).build();
+        const btn = new DrawingBoardMenuBtn.Builder(this, "Back", type).setOnClick(this.onClickBack.bind(this)).build();
         btn.draw();
         return btn;
       }
       case "forward": {
-        const btn = new DrawingBoardMenuBtn.Builder(this, "Forward").setOnClick(() => {}).build();
+        const btn = new DrawingBoardMenuBtn.Builder(this, "Forward", type).setOnClick(() => {}).build();
         btn.draw();
         return btn;
       }
 
       case "color": {
-        const btn = new DrawingBoardMenuInput.Builder(this, "Color").setOnChange(() => {}).build();
+        const btn = new DrawingBoardMenuInput.Builder(this, "Color", type).setOnChange(() => {}).build();
         btn.draw();
         return btn;
       }
 
       case "pipette": {
-        const btn = new DrawingBoardMenuBtn.Builder(this, "Pipette").setOnClick(() => {}).build();
+        const btn = new DrawingBoardMenuBtn.Builder(this, "Pipette", type)
+          .setOnClick(this.onClickPipette.bind(this))
+          .build();
         btn.draw();
         return btn;
       }
 
       case "eraser": {
-        const btn = new DrawingBoardMenuBtn.Builder(this, "Eraser").setOnClick(() => {}).build();
+        const btn = new DrawingBoardMenuBtn.Builder(this, "Eraser", type)
+          .setOnClick(this.onClickEraser.bind(this))
+          .build();
         btn.draw();
         return btn;
       }
 
       case "pen": {
-        const btn = new DrawingBoardMenuBtn.Builder(this, "Pen").setOnClick(() => {}).build();
+        const btn = new DrawingBoardMenuBtn.Builder(this, "Pen", type).setOnClick(this.onClickPen.bind(this)).build();
         btn.draw();
         return btn;
       }
 
       case "circle": {
-        const btn = new DrawingBoardMenuBtn.Builder(this, "Circle").setOnClick(() => {}).build();
+        const btn = new DrawingBoardMenuBtn.Builder(this, "Circle", type)
+          .setOnClick(this.onClickCircle.bind(this))
+          .build();
         btn.draw();
         return btn;
       }
 
       case "rectangle": {
-        const btn = new DrawingBoardMenuBtn.Builder(this, "Rectangle").setOnClick(() => {}).build();
+        const btn = new DrawingBoardMenuBtn.Builder(this, "Rectangle", type).setOnClick(this.onClickRectangle).build();
         btn.draw();
         return btn;
       }
