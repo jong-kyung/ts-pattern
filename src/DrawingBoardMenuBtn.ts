@@ -24,7 +24,7 @@ export abstract class DrawingBoardMenuElement {
 }
 
 export class DrawingBoardMenuInput extends DrawingBoardMenuElement {
-  private onChange?: () => void;
+  private onChange?: (e: Event) => void;
   private value?: string | number;
 
   private constructor(
@@ -47,6 +47,7 @@ export class DrawingBoardMenuInput extends DrawingBoardMenuElement {
     if (this.onChange) {
       input.addEventListener("change", this.onChange.bind(this));
     }
+    this.menu.colorBtn = input;
     this.menu.dom.append(input);
   }
 
@@ -58,7 +59,7 @@ export class DrawingBoardMenuInput extends DrawingBoardMenuElement {
       this.btn = new DrawingBoardMenuInput(menu, name, type);
     }
 
-    setOnChange(onChange: () => void) {
+    setOnChange(onChange: (e: Event) => void) {
       this.btn.onChange = onChange;
       return this;
     }

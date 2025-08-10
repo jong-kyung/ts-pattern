@@ -16,6 +16,7 @@ import { DrawingBoardMenuBtn, DrawingBoardMenuInput } from "./DrawingBoardMenuBt
 export abstract class DrawingBoardMenu {
   drawingBoard: DrawingBoard;
   dom: HTMLElement;
+  colorBtn!: HTMLInputElement;
 
   protected constructor(drawingBoard: DrawingBoard, dom: HTMLElement) {
     this.drawingBoard = drawingBoard;
@@ -25,7 +26,12 @@ export abstract class DrawingBoardMenu {
   setActiveButton(type: DrawingBoardMode): void {
     document.querySelector(".active")?.classList.remove("active");
     document.querySelector(`#${type}-btn`)?.classList.add("active");
-    this.drawingBoard.setMode(type);
+  }
+
+  // Invoker 역할
+  executeCommand(command: Command) {
+    // Invoker 명령을 실행
+    command.execute();
   }
 
   abstract initialize(types: BtnType[]): void;
@@ -55,13 +61,7 @@ export class ChromeDrawingBoardMenu extends DrawingBoardMenu {
 
   override initialize(types: BtnType[]): void {
     types.forEach(this.drawButtonByType.bind(this));
-    this.setActiveButton("pen"); // 기본 모드 설정
-  }
-
-  // Invoker 역할
-  executeCommand(command: Command) {
-    // Invoker 명령을 실행
-    command.execute();
+    this.drawingBoard.setMode("pen");
   }
 
   onClickBack() {
@@ -75,19 +75,19 @@ export class ChromeDrawingBoardMenu extends DrawingBoardMenu {
   }
 
   onClickEraser() {
-    this.executeCommand(new EraserSelectCommand(this.drawingBoard));
+    this.drawingBoard.setMode("eraser");
   }
 
   onClickCircle() {
-    this.executeCommand(new CircleSelectCommand(this.drawingBoard));
+    this.drawingBoard.setMode("circle");
   }
 
   onClickRectangle() {
-    this.executeCommand(new RectangleSelectCommand(this.drawingBoard));
+    this.drawingBoard.setMode("rectangle");
   }
 
   onClickPipette() {
-    this.executeCommand(new PipetteSelectCommand(this.drawingBoard));
+    this.drawingBoard.setMode("pipette");
   }
 
   drawButtonByType(type: BtnType) {
@@ -104,7 +104,13 @@ export class ChromeDrawingBoardMenu extends DrawingBoardMenu {
       }
 
       case "color": {
-        const btn = new DrawingBoardMenuInput.Builder(this, "Color", type).setOnChange(() => {}).build();
+        const btn = new DrawingBoardMenuInput.Builder(this, "Color", type)
+          .setOnChange((e: Event) => {
+            if (e.target) {
+              this.drawingBoard.setColor((e.target as HTMLInputElement).value);
+            }
+          })
+          .build();
         btn.draw();
         return btn;
       }
