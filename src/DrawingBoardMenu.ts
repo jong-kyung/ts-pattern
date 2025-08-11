@@ -13,6 +13,7 @@ import {
 } from "./commands";
 
 import { DrawingBoardMenuBtn, DrawingBoardMenuInput, DrawingBoardMenuSaveBtn } from "./DrawingBoardMenuBtn";
+import { SubscriptionManager } from "./Observer";
 
 export abstract class DrawingBoardMenu {
   drawingBoard: DrawingBoard;
@@ -22,7 +23,7 @@ export abstract class DrawingBoardMenu {
   protected constructor(drawingBoard: DrawingBoard, dom: HTMLElement) {
     this.drawingBoard = drawingBoard;
     this.dom = dom;
-    this.drawingBoard.saveCompleteObserver.subscribe({
+    SubscriptionManager.getInstance().subscribe("saveComplete", {
       name: "menu",
       publish: this.afterSaveComplete.bind(this),
     });
@@ -30,6 +31,10 @@ export abstract class DrawingBoardMenu {
 
   afterSaveComplete() {
     console.log("menu: save complete");
+  }
+
+  cancelSaveCompleteAlarm() {
+    SubscriptionManager.getInstance().unsubscribe("saveComplete", "menu");
   }
 
   setActiveButton(type: DrawingBoardMode): void {
