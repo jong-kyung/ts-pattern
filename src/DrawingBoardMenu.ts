@@ -12,7 +12,7 @@ import {
   type Command,
 } from "./commands";
 
-import { DrawingBoardMenuBtn, DrawingBoardMenuInput } from "./DrawingBoardMenuBtn";
+import { DrawingBoardMenuBtn, DrawingBoardMenuInput, DrawingBoardMenuSaveBtn } from "./DrawingBoardMenuBtn";
 
 export abstract class DrawingBoardMenu {
   drawingBoard: DrawingBoard;
@@ -157,7 +157,16 @@ export class ChromeDrawingBoardMenu extends DrawingBoardMenu {
       }
 
       case "save": {
-        const btn = new DrawingBoardMenuBtn.Builder(this, "Save", type).setOnClick(this.onSave.bind(this)).build();
+        const btn = new DrawingBoardMenuSaveBtn.Builder(this, "Save", type)
+          .setOnClick(this.onSave.bind(this))
+          .setFilterListeners({
+            blur: (e: Event) => {
+              this.drawingBoard.saveSetting.blur = (e.target as HTMLInputElement)?.checked;
+            },
+            grayscale: () => {},
+            invert: () => {},
+          })
+          .build();
         btn.draw();
         return btn;
       }

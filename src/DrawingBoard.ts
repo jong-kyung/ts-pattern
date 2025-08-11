@@ -18,6 +18,11 @@ export abstract class DrawingBoard {
   color: string;
   active: boolean;
   saveStrategy!: () => void;
+  saveSetting = {
+    blur: false,
+    grayscale: false,
+    invert: false,
+  };
 
   protected constructor(canvas: HTMLElement | null, factory: typeof AbstractFactory) {
     if (!canvas || !(canvas instanceof HTMLCanvasElement)) {

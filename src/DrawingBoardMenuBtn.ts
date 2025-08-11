@@ -1,7 +1,7 @@
 import type { BtnType, DrawingBoardMenu } from "./DrawingBoardMenu";
 
 abstract class DrawingBoardMenuElementBuilder {
-  btn!: DrawingBoardMenuBtn;
+  btn!: DrawingBoardMenuElement;
   constructor() {}
 
   build() {
@@ -20,7 +20,16 @@ export abstract class DrawingBoardMenuElement {
     this.type = type;
   }
 
-  abstract draw(): void;
+  draw() {
+    const btn = this.createButton();
+    // 템플릿 메서드 패턴
+    this.appendBeforeButton();
+    this.appendToDom(btn);
+  }
+
+  abstract createButton(): HTMLElement;
+  abstract appendBeforeButton(): void;
+  abstract appendToDom(element: HTMLElement): void;
 }
 
 export class DrawingBoardMenuInput extends DrawingBoardMenuElement {
@@ -39,7 +48,7 @@ export class DrawingBoardMenuInput extends DrawingBoardMenuElement {
     this.value = value;
   }
 
-  draw() {
+  createButton(): HTMLInputElement {
     const input = document.createElement("input");
     input.title = this.name;
     input.type = "color";
@@ -47,7 +56,12 @@ export class DrawingBoardMenuInput extends DrawingBoardMenuElement {
     if (this.onChange) {
       input.addEventListener("change", this.onChange.bind(this));
     }
-    this.menu.colorBtn = input;
+    return input;
+  }
+
+  appendBeforeButton() {}
+
+  appendToDom(input: HTMLInputElement) {
     this.menu.dom.append(input);
   }
 
@@ -71,22 +85,28 @@ export class DrawingBoardMenuInput extends DrawingBoardMenuElement {
   };
 }
 export class DrawingBoardMenuBtn extends DrawingBoardMenuElement {
-  private onClick?: () => void;
-  private active?: boolean;
+  protected onClick?: () => void;
+  protected active?: boolean;
 
-  private constructor(menu: DrawingBoardMenu, name: string, type: BtnType, onClick?: () => void, active?: boolean) {
+  protected constructor(menu: DrawingBoardMenu, name: string, type: BtnType, onClick?: () => void, active?: boolean) {
     super(menu, name, type);
     this.onClick = onClick;
     this.active = active;
   }
 
-  draw() {
+  createButton(): HTMLButtonElement {
     const button = document.createElement("button");
     button.textContent = this.name;
     button.id = `${this.type}-button`;
     if (this.onClick) {
       button.addEventListener("click", this.onClick.bind(this));
     }
+    return button;
+  }
+
+  appendBeforeButton() {}
+
+  appendToDom(button: HTMLButtonElement) {
     this.menu.dom.append(button);
   }
 
@@ -96,6 +116,58 @@ export class DrawingBoardMenuBtn extends DrawingBoardMenuElement {
     constructor(menu: DrawingBoardMenu, name: string, type: BtnType) {
       super();
       this.btn = new DrawingBoardMenuBtn(menu, name, type);
+    }
+
+    setOnClick(onClick: () => void) {
+      this.btn.onClick = onClick;
+      return this;
+    }
+
+    setActive(active: boolean) {
+      this.btn.active = active;
+      return this;
+    }
+  };
+}
+
+export class DrawingBoardMenuSaveBtn extends DrawingBoardMenuBtn {
+  private onClickBlur!: (e: Event) => void;
+  private onClickInvert!: (e: Event) => void;
+  private onClickGrayscale!: (e: Event) => void;
+
+  private constructor(menu: DrawingBoardMenu, name: string, type: BtnType, onClick?: () => void, active?: boolean) {
+    super(menu, name, type);
+    this.onClick = onClick;
+    this.active = active;
+  }
+
+  override appendBeforeButton() {
+    this.drawInput("blur", this.onClickBlur);
+    this.drawInput("invert", this.onClickInvert);
+    this.drawInput("grayscale", this.onClickGrayscale);
+  }
+
+  drawInput(title: string, onChange: (e: Event) => void) {
+    const input = document.createElement("input");
+    input.type = "checkbox";
+    input.title = title;
+    input.addEventListener("change", onChange.bind(this));
+    this.menu.dom.append(input);
+  }
+
+  // Builder 패턴
+  static override Builder = class DrawingBoardSaveMenuBtnBuilder extends DrawingBoardMenuElementBuilder {
+    override btn: DrawingBoardMenuSaveBtn;
+    constructor(menu: DrawingBoardMenu, name: string, type: BtnType) {
+      super();
+      this.btn = new DrawingBoardMenuSaveBtn(menu, name, type);
+    }
+
+    setFilterListeners(listeners: { [key in "blur" | "invert" | "grayscale"]: (e: Event) => void }) {
+      this.btn.onClickBlur = listeners.blur;
+      this.btn.onClickInvert = listeners.invert;
+      this.btn.onClickGrayscale = listeners.grayscale;
+      return this;
     }
 
     setOnClick(onClick: () => void) {
