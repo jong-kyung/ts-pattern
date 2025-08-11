@@ -3,6 +3,7 @@ import type { ChromeDrawingBoardHistory, DrawingBoardHistory } from "./DrawingBo
 import type { BtnType, ChromeDrawingBoardMenu, DrawingBoardMenu } from "./DrawingBoardMenu";
 import { BlurFilter, DefaultFilter, GrayScaleFilter, InvertFilter } from "./filters";
 import { CircleMode, EraserMode, PenMode, PipetteMode, RectangleMode, type Mode } from "./modes";
+import { SaveCompleteObserver } from "./Observer";
 
 export interface DrawingBoardOption {
   menu: BtnType[];
@@ -24,6 +25,8 @@ export abstract class DrawingBoard {
     grayscale: false,
     invert: false,
   };
+  // 옵저버 패턴을 사용하여 저장 완료 이벤트를 구독할 수 있도록 함
+  saveCompleteObserver: SaveCompleteObserver;
 
   protected constructor(canvas: HTMLElement | null, factory: typeof AbstractFactory) {
     if (!canvas || !(canvas instanceof HTMLCanvasElement)) {
@@ -34,6 +37,7 @@ export abstract class DrawingBoard {
     this.color = "#000";
     this.active = false;
     this.setSaveStrategy("png");
+    this.saveCompleteObserver = new SaveCompleteObserver();
   }
 
   setSaveStrategy(imageType: "png" | "jpg" | "webp" | "avif" | "gif" | "pdf") {
@@ -70,6 +74,7 @@ export abstract class DrawingBoard {
                 let url = dataURL.replace(/^data:image\/png/, "data:application/octet-stream");
                 a.href = url;
                 a.click();
+                this.saveCompleteObserver.publish();
               });
               reader.readAsDataURL(blob);
             });

@@ -19,6 +19,14 @@ export abstract class DrawingBoardHistory {
     this.drawingBoard = drawingBoard;
     // 프로토타입 패턴 (자바스크립트의 프로토타입과는 다름)
     this.stack = new HistoryStack();
+    this.drawingBoard.saveCompleteObserver.subscribe({
+      name: "history",
+      publish: this.afterSaveComplete.bind(this),
+    });
+  }
+
+  afterSaveComplete() {
+    console.log("history: save complete");
   }
 
   abstract undo(): void;

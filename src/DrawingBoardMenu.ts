@@ -22,6 +22,14 @@ export abstract class DrawingBoardMenu {
   protected constructor(drawingBoard: DrawingBoard, dom: HTMLElement) {
     this.drawingBoard = drawingBoard;
     this.dom = dom;
+    this.drawingBoard.saveCompleteObserver.subscribe({
+      name: "menu",
+      publish: this.afterSaveComplete.bind(this),
+    });
+  }
+
+  afterSaveComplete() {
+    console.log("menu: save complete");
   }
 
   setActiveButton(type: DrawingBoardMode): void {
