@@ -70,9 +70,7 @@ export class ChromeDrawingBoardMenu extends DrawingBoardMenu {
   }
 
   onClickPen() {
-    const command = new PenSelectCommand(this.drawingBoard);
-    this.executeCommand(command);
-    this.drawingBoard.history.stack.push(command);
+    this.drawingBoard.setMode("pen");
   }
 
   onClickEraser() {
@@ -163,8 +161,12 @@ export class ChromeDrawingBoardMenu extends DrawingBoardMenu {
             blur: (e: Event) => {
               this.drawingBoard.saveSetting.blur = (e.target as HTMLInputElement)?.checked;
             },
-            grayscale: () => {},
-            invert: () => {},
+            grayscale: (e: Event) => {
+              this.drawingBoard.saveSetting.grayscale = (e.target as HTMLInputElement)?.checked;
+            },
+            invert: (e: Event) => {
+              this.drawingBoard.saveSetting.invert = (e.target as HTMLInputElement)?.checked;
+            },
           })
           .build();
         btn.draw();
