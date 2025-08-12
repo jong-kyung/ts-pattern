@@ -1,4 +1,4 @@
-import { EraserSelectCommand, PenSelectCommand, PipetteSelectCommand } from "../commands";
+import { Command, EraserSelectCommand, PenSelectCommand, PipetteSelectCommand, SaveHistoryCommand } from "../commands";
 import type { DrawingBoard } from "../DrawingBoard";
 
 const convertToHex = (color: number) => {
@@ -22,6 +22,9 @@ export abstract class Mode {
   abstract mousedown(e: MouseEvent): void;
   abstract mousemove(e: MouseEvent): void;
   abstract mouseup(e: MouseEvent): void;
+  invoke(command: Command) {
+    command.execute();
+  }
 }
 
 export class PenMode extends Mode {
@@ -30,7 +33,7 @@ export class PenMode extends Mode {
     drawingBoard.menu.executeCommand(new PenSelectCommand(drawingBoard));
   }
 
-  mousedown(e: MouseEvent): void {
+  override mousedown(e: MouseEvent): void {
     this.drawingBoard.active = true;
     this.drawingBoard.ctx.lineWidth = 1;
     this.drawingBoard.ctx.lineCap = "round";
@@ -40,14 +43,17 @@ export class PenMode extends Mode {
     this.drawingBoard.ctx.moveTo(e.offsetX, e.offsetY);
   }
 
-  mousemove(e: MouseEvent): void {
+  override mousemove(e: MouseEvent): void {
     if (!this.drawingBoard.active) return;
     this.drawingBoard.ctx.lineTo(e.offsetX, e.offsetY);
     this.drawingBoard.ctx.stroke();
     this.drawingBoard.ctx.moveTo(e.offsetX, e.offsetY);
   }
 
-  mouseup(e: MouseEvent): void {
+  override mouseup(e: MouseEvent): void {
+    if (this.drawingBoard.active) {
+      this.invoke(new SaveHistoryCommand(this.drawingBoard));
+    }
     this.drawingBoard.active = false;
   }
 }
@@ -57,7 +63,7 @@ export class EraserMode extends Mode {
     super(drawingBoard);
     drawingBoard.menu.executeCommand(new EraserSelectCommand(drawingBoard));
   }
-  mousedown(e: MouseEvent): void {
+  override mousedown(e: MouseEvent): void {
     this.drawingBoard.active = true;
     this.drawingBoard.ctx.lineWidth = 10;
     this.drawingBoard.ctx.lineCap = "round";
@@ -67,14 +73,17 @@ export class EraserMode extends Mode {
     this.drawingBoard.ctx.moveTo(e.offsetX, e.offsetY);
   }
 
-  mousemove(e: MouseEvent): void {
+  override mousemove(e: MouseEvent): void {
     if (!this.drawingBoard.active) return;
     this.drawingBoard.ctx.lineTo(e.offsetX, e.offsetY);
     this.drawingBoard.ctx.stroke();
     this.drawingBoard.ctx.moveTo(e.offsetX, e.offsetY);
   }
 
-  mouseup(e: MouseEvent): void {
+  override mouseup(e: MouseEvent): void {
+    if (this.drawingBoard.active) {
+      this.invoke(new SaveHistoryCommand(this.drawingBoard));
+    }
     this.drawingBoard.active = false;
   }
 }
@@ -85,11 +94,11 @@ export class PipetteMode extends Mode {
     drawingBoard.menu.executeCommand(new PipetteSelectCommand(drawingBoard));
   }
 
-  mousedown(e: MouseEvent): void {
+  override mousedown(e: MouseEvent): void {
     // Pipette mode mouse down logic
   }
 
-  mousemove(e: MouseEvent): void {
+  override mousemove(e: MouseEvent): void {
     const { data } = this.drawingBoard.ctx.getImageData(e.offsetX, e.offsetY, 1, 1);
     // 투명도
     if (data[3] === 0) {
@@ -99,35 +108,41 @@ export class PipetteMode extends Mode {
     }
   }
 
-  mouseup(e: MouseEvent): void {
+  override mouseup(e: MouseEvent): void {
     this.drawingBoard.menu.executeCommand(new PenSelectCommand(this.drawingBoard));
   }
 }
 
 export class RectangleMode extends Mode {
-  mousedown(e: MouseEvent): void {
-    // Rectangle mode mouse down logic
+  override mousedown(e: MouseEvent): void {
+    this.drawingBoard.active = true;
   }
 
-  mousemove(e: MouseEvent): void {
+  override mousemove(e: MouseEvent): void {
     // Rectangle mode mouse move logic
   }
 
-  mouseup(e: MouseEvent): void {
-    // Rectangle mode mouse up logic
+  override mouseup(e: MouseEvent): void {
+    if (this.drawingBoard.active) {
+      this.invoke(new SaveHistoryCommand(this.drawingBoard));
+    }
+    this.drawingBoard.active = false;
   }
 }
 
 export class CircleMode extends Mode {
-  mousedown(e: MouseEvent): void {
-    // Circle mode mouse down logic
+  override mousedown(e: MouseEvent): void {
+    this.drawingBoard.active = true;
   }
 
-  mousemove(e: MouseEvent): void {
+  override mousemove(e: MouseEvent): void {
     // Circle mode mouse move logic
   }
 
-  mouseup(e: MouseEvent): void {
-    // Circle mode mouse up logic
+  override mouseup(e: MouseEvent): void {
+    if (this.drawingBoard.active) {
+      this.invoke(new SaveHistoryCommand(this.drawingBoard));
+    }
+    this.drawingBoard.active = false;
   }
 }

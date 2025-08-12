@@ -1,3 +1,4 @@
+import { Command, SaveHistoryCommand } from "./commands";
 import { ChromeDrawingBoardFactory, IEDrawingBoardFactory, type AbstractFactory } from "./DrawingBoardFactory";
 import type { ChromeDrawingBoardHistory, DrawingBoardHistory } from "./DrawingBoardHistory";
 import type { BtnType, ChromeDrawingBoardMenu, DrawingBoardMenu } from "./DrawingBoardMenu";
@@ -25,7 +26,16 @@ export abstract class DrawingBoard {
     grayscale: false,
     invert: false,
   };
-  // 옵저버 패턴을 사용하여 저장 완료 이벤트를 구독할 수 있도록 함
+
+  // 메멘토 패턴
+  makeSnapshot() {
+    const snapshot = {
+      color: this.color,
+      mode: this.mode,
+      data: this.canvas.toDataURL("image/png"),
+    };
+    return Object.freeze(snapshot); // 수정 방지용
+  }
 
   protected constructor(canvas: HTMLElement | null, factory: typeof AbstractFactory) {
     if (!canvas || !(canvas instanceof HTMLCanvasElement)) {
@@ -123,6 +133,10 @@ export abstract class DrawingBoard {
     }
   }
 
+  invoke(command: Command) {
+    command.execute();
+  }
+
   setColor(color: string) {
     this.color = color;
   }
@@ -132,6 +146,21 @@ export abstract class DrawingBoard {
     if (this.menu.colorBtn) {
       this.menu.colorBtn.value = color;
     }
+  }
+
+  resetState() {
+    this.color = "#fff";
+    this.mode = new PenMode(this);
+    this.ctx.clearRect(0, 0, 300, 300); // canvas 초기화
+  }
+
+  restore(history: { mode: Mode; color: string; data: string }) {
+    const img = new Image();
+    img.addEventListener("load", () => {
+      this.ctx.clearRect(0, 0, 300, 300);
+      this.ctx.drawImage(img, 0, 0);
+    });
+    img.src = history.data;
   }
 
   abstract initialize(option: DrawingBoardOption): void;

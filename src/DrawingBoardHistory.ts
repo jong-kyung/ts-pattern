@@ -10,11 +10,15 @@ class HistoryStack extends Array implements Cloneable {
   clone(): Cloneable {
     return this.slice() as HistoryStack;
   }
+  override slice(start?: number, end?: number): HistoryStack {
+    return super.slice(start, end) as HistoryStack;
+  }
 }
 
 export abstract class DrawingBoardHistory {
   drawingBoard: DrawingBoard;
   stack: HistoryStack;
+  index = -1;
 
   protected constructor(drawingBoard: DrawingBoard) {
     this.drawingBoard = drawingBoard;
@@ -26,6 +30,21 @@ export abstract class DrawingBoardHistory {
     });
   }
 
+  // caretaker : 이전 스냅샷 혹은 현재 스냅샷을 저장
+  saveHistory() {
+    const snapshot = this.drawingBoard.makeSnapshot();
+    if (this.index === this.stack.length - 1) {
+      this.stack.push(snapshot);
+      this.index++;
+    } else {
+      this.stack = this.stack.slice(0, this.index + 1);
+      this.stack.push(snapshot);
+      this.index++;
+    }
+    (document.querySelector("#back-button") as HTMLButtonElement).disabled = false;
+    (document.querySelector("#forward-button") as HTMLButtonElement).disabled = true;
+  }
+
   afterSaveComplete() {
     console.log("history: save complete");
   }
@@ -34,8 +53,37 @@ export abstract class DrawingBoardHistory {
     SubscriptionManager.getInstance().unsubscribe("saveComplete", "history");
   }
 
-  abstract undo(): void;
-  abstract redo(): void;
+  undoable() {
+    return this.index > 0;
+  }
+
+  redoable() {
+    return this.index < this.stack.length - 1;
+  }
+
+  undo(): void {
+    if (this.undoable()) {
+      this.index--;
+      (document.querySelector("#forward-button") as HTMLButtonElement).disabled = false;
+    } else {
+      (document.querySelector("#back-button") as HTMLButtonElement).disabled = true;
+      return;
+    }
+    this.drawingBoard.restore(this.stack[this.index]);
+  }
+
+  redo(): void {
+    if (this.redoable()) {
+      this.index++;
+    } else {
+      return;
+    }
+
+    if (!this.redoable()) {
+      (document.querySelector("#forward-button") as HTMLButtonElement).disabled = true;
+    }
+    this.drawingBoard.restore(this.stack[this.index]);
+  }
 
   getStack() {
     return this.stack.clone();
@@ -45,7 +93,10 @@ export abstract class DrawingBoardHistory {
     this.stack = stack.clone() as HistoryStack;
   }
 
-  abstract initialize(): void;
+  initialize() {
+    (document.querySelector("#back-button") as HTMLButtonElement).disabled = true;
+    (document.querySelector("#forward-button") as HTMLButtonElement).disabled = true;
+  }
 
   static getInstance(drawingBoard: DrawingBoard) {}
 }
@@ -53,22 +104,16 @@ export abstract class DrawingBoardHistory {
 export class IEDrawingBoardHistory extends DrawingBoardHistory {
   static instance: IEDrawingBoardHistory;
 
-  override initialize(): void {}
-
   static override getInstance(drawingBoard: IEDrawingBoard): IEDrawingBoardHistory {
     if (!this.instance) {
       this.instance = new IEDrawingBoardHistory(drawingBoard);
     }
     return this.instance;
   }
-  override undo(): void {}
-  override redo(): void {}
 }
 
 export class ChromeDrawingBoardHistory extends DrawingBoardHistory {
   static instance: ChromeDrawingBoardHistory;
-
-  override initialize(): void {}
 
   static override getInstance(drawingBoard: ChromeDrawingBoard): ChromeDrawingBoardHistory {
     if (!this.instance) {
@@ -76,7 +121,4 @@ export class ChromeDrawingBoardHistory extends DrawingBoardHistory {
     }
     return this.instance;
   }
-
-  override undo(): void {}
-  override redo(): void {}
 }

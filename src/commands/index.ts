@@ -49,6 +49,20 @@ export class PenSelectCommand extends Command {
   }
 }
 
+export class SaveHistoryCommand extends Command {
+  name = "saveHistory";
+  drawingBoard: DrawingBoard;
+
+  constructor(drawingBoard: DrawingBoard) {
+    super();
+    this.drawingBoard = drawingBoard;
+  }
+
+  override execute(): void {
+    this.drawingBoard.history.saveHistory();
+  }
+}
+
 export class EraserSelectCommand extends Command {
   name = "eraserSelect";
   drawingBoard: DrawingBoard;

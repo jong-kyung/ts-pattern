@@ -5,10 +5,12 @@ import {
   BackCommand,
   CircleSelectCommand,
   EraserSelectCommand,
+  ForwardCommand,
   PenSelectCommand,
   PipetteSelectCommand,
   RectangleSelectCommand,
   SaveCommand,
+  SaveHistoryCommand,
   type Command,
 } from "./commands";
 
@@ -76,6 +78,11 @@ export class ChromeDrawingBoardMenu extends DrawingBoardMenu {
   override initialize(types: BtnType[]): void {
     types.forEach(this.drawButtonByType.bind(this));
     this.drawingBoard.setMode("pen");
+    this.executeCommand(new SaveHistoryCommand(this.drawingBoard));
+  }
+
+  onClickForward() {
+    this.executeCommand(new ForwardCommand(this.drawingBoard.history));
   }
 
   onClickBack() {
@@ -114,7 +121,9 @@ export class ChromeDrawingBoardMenu extends DrawingBoardMenu {
         return btn;
       }
       case "forward": {
-        const btn = new DrawingBoardMenuBtn.Builder(this, "Forward", type).setOnClick(() => {}).build();
+        const btn = new DrawingBoardMenuBtn.Builder(this, "Forward", type)
+          .setOnClick(this.onClickForward.bind(this))
+          .build();
         btn.draw();
         return btn;
       }
