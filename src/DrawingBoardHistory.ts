@@ -1,6 +1,25 @@
 import type { ChromeDrawingBoard, DrawingBoard, IEDrawingBoard } from "./DrawingBoard";
 import { SubscriptionManager } from "./Observer";
 
+// Iterator 패턴
+class StackIterator {
+  private index = 0;
+  private readonly stack;
+  constructor(stack: HistoryStack) {
+    this.stack = stack;
+  }
+
+  next() {
+    if (!this.done) {
+      return this.stack[this.index++];
+    }
+  }
+
+  get done() {
+    return this.stack.length === this.index;
+  }
+}
+
 interface Cloneable {
   clone(): Cloneable;
 }
