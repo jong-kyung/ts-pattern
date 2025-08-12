@@ -1,4 +1,5 @@
 import type { BtnType, DrawingBoardMenu } from "./DrawingBoardMenu";
+import type { MenuDrawVisitor } from "./MenuDrawVisitor";
 
 abstract class DrawingBoardMenuElementBuilder {
   btn!: DrawingBoardMenuElement;
@@ -10,9 +11,9 @@ abstract class DrawingBoardMenuElementBuilder {
 }
 
 export abstract class DrawingBoardMenuElement {
-  protected menu: DrawingBoardMenu;
-  protected name: string;
-  protected type: BtnType;
+  public menu: DrawingBoardMenu;
+  public name: string;
+  public type: BtnType;
 
   protected constructor(menu: DrawingBoardMenu, name: string, type: BtnType) {
     this.menu = menu;
@@ -20,21 +21,12 @@ export abstract class DrawingBoardMenuElement {
     this.type = type;
   }
 
-  draw() {
-    const btn = this.createButton();
-    // 템플릿 메서드 패턴
-    this.appendBeforeButton();
-    this.appendToDom(btn);
-  }
-
-  abstract createButton(): HTMLElement;
-  abstract appendBeforeButton(): void;
-  abstract appendToDom(element: HTMLElement): void;
+  abstract accept(visitor: MenuDrawVisitor): HTMLElement;
 }
 
 export class DrawingBoardMenuInput extends DrawingBoardMenuElement {
-  private onChange?: (e: Event) => void;
-  private value?: string | number;
+  public onChange?: (e: Event) => void;
+  public value?: string | number;
 
   private constructor(
     menu: DrawingBoardMenu,
@@ -48,21 +40,8 @@ export class DrawingBoardMenuInput extends DrawingBoardMenuElement {
     this.value = value;
   }
 
-  createButton(): HTMLInputElement {
-    const input = document.createElement("input");
-    input.title = this.name;
-    input.type = "color";
-    input.id = `${this.type}-input`;
-    if (this.onChange) {
-      input.addEventListener("change", this.onChange.bind(this));
-    }
-    return input;
-  }
-
-  appendBeforeButton() {}
-
-  appendToDom(input: HTMLInputElement) {
-    this.menu.dom.append(input);
+  override accept(visitor: MenuDrawVisitor): HTMLInputElement {
+    return visitor.drawInput(this);
   }
 
   // Builder 패턴
@@ -85,8 +64,8 @@ export class DrawingBoardMenuInput extends DrawingBoardMenuElement {
   };
 }
 export class DrawingBoardMenuBtn extends DrawingBoardMenuElement {
-  protected onClick?: () => void;
-  protected active?: boolean;
+  public onClick?: () => void;
+  public active?: boolean;
 
   protected constructor(menu: DrawingBoardMenu, name: string, type: BtnType, onClick?: () => void, active?: boolean) {
     super(menu, name, type);
@@ -94,20 +73,8 @@ export class DrawingBoardMenuBtn extends DrawingBoardMenuElement {
     this.active = active;
   }
 
-  createButton(): HTMLButtonElement {
-    const button = document.createElement("button");
-    button.textContent = this.name;
-    button.id = `${this.type}-button`;
-    if (this.onClick) {
-      button.addEventListener("click", this.onClick.bind(this));
-    }
-    return button;
-  }
-
-  appendBeforeButton() {}
-
-  appendToDom(button: HTMLButtonElement) {
-    this.menu.dom.append(button);
+  override accept(visitor: MenuDrawVisitor): HTMLButtonElement {
+    return visitor.drawBtn(this);
   }
 
   // Builder 패턴
@@ -131,9 +98,9 @@ export class DrawingBoardMenuBtn extends DrawingBoardMenuElement {
 }
 
 export class DrawingBoardMenuSaveBtn extends DrawingBoardMenuBtn {
-  private onClickBlur!: (e: Event) => void;
-  private onClickInvert!: (e: Event) => void;
-  private onClickGrayscale!: (e: Event) => void;
+  public onClickBlur!: (e: Event) => void;
+  public onClickInvert!: (e: Event) => void;
+  public onClickGrayscale!: (e: Event) => void;
 
   private constructor(menu: DrawingBoardMenu, name: string, type: BtnType, onClick?: () => void, active?: boolean) {
     super(menu, name, type);
@@ -141,18 +108,8 @@ export class DrawingBoardMenuSaveBtn extends DrawingBoardMenuBtn {
     this.active = active;
   }
 
-  override appendBeforeButton() {
-    this.drawInput("blur", this.onClickBlur);
-    this.drawInput("invert", this.onClickInvert);
-    this.drawInput("grayscale", this.onClickGrayscale);
-  }
-
-  drawInput(title: string, onChange: (e: Event) => void) {
-    const input = document.createElement("input");
-    input.type = "checkbox";
-    input.title = title;
-    input.addEventListener("change", onChange.bind(this));
-    this.menu.dom.append(input);
+  override accept(visitor: MenuDrawVisitor): HTMLButtonElement {
+    return visitor.drawSaveBtn(this);
   }
 
   // Builder 패턴
@@ -161,6 +118,10 @@ export class DrawingBoardMenuSaveBtn extends DrawingBoardMenuBtn {
     constructor(menu: DrawingBoardMenu, name: string, type: BtnType) {
       super();
       this.btn = new DrawingBoardMenuSaveBtn(menu, name, type);
+    }
+
+    override build(): DrawingBoardMenuSaveBtn {
+      return this.btn;
     }
 
     setFilterListeners(listeners: { [key in "blur" | "invert" | "grayscale"]: (e: Event) => void }) {

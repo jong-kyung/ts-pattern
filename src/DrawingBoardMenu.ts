@@ -1,26 +1,17 @@
 import type { ChromeDrawingBoard, DrawingBoardMode, IEDrawingBoard } from "./DrawingBoard";
 import type { DrawingBoard } from "./DrawingBoard";
 
-import {
-  BackCommand,
-  CircleSelectCommand,
-  EraserSelectCommand,
-  ForwardCommand,
-  PenSelectCommand,
-  PipetteSelectCommand,
-  RectangleSelectCommand,
-  SaveCommand,
-  SaveHistoryCommand,
-  type Command,
-} from "./commands";
+import { BackCommand, ForwardCommand, SaveCommand, SaveHistoryCommand, type Command } from "./commands";
 
 import { DrawingBoardMenuBtn, DrawingBoardMenuInput, DrawingBoardMenuSaveBtn } from "./DrawingBoardMenuBtn";
 import { SubscriptionManager } from "./Observer";
+import { ChromeMenuDrawVisitor } from "./MenuDrawVisitor";
 
 export abstract class DrawingBoardMenu {
   drawingBoard: DrawingBoard;
   dom: HTMLElement;
   colorBtn!: HTMLInputElement;
+  menuDrawVisitor!: ChromeMenuDrawVisitor;
 
   protected constructor(drawingBoard: DrawingBoard, dom: HTMLElement) {
     this.drawingBoard = drawingBoard;
@@ -75,8 +66,20 @@ export type BtnType = "pen" | "circle" | "rectangle" | "eraser" | "back" | "forw
 export class ChromeDrawingBoardMenu extends DrawingBoardMenu {
   static instance: ChromeDrawingBoardMenu;
 
+  constructor(
+    drawingBoard: ChromeDrawingBoard,
+    dom: HTMLElement,
+    menuDrawVisitor: ChromeMenuDrawVisitor = new ChromeMenuDrawVisitor()
+  ) {
+    super(drawingBoard, dom);
+    this.menuDrawVisitor = menuDrawVisitor;
+  }
+
   override initialize(types: BtnType[]): void {
-    types.forEach(this.drawButtonByType.bind(this));
+    types.forEach((type) => {
+      const btn = this.drawButtonByType.bind(this)(type);
+      btn.accept(this.menuDrawVisitor);
+    });
     this.drawingBoard.setMode("pen");
     this.executeCommand(new SaveHistoryCommand(this.drawingBoard));
   }
@@ -117,14 +120,12 @@ export class ChromeDrawingBoardMenu extends DrawingBoardMenu {
     switch (type) {
       case "back": {
         const btn = new DrawingBoardMenuBtn.Builder(this, "Back", type).setOnClick(this.onClickBack.bind(this)).build();
-        btn.draw();
         return btn;
       }
       case "forward": {
         const btn = new DrawingBoardMenuBtn.Builder(this, "Forward", type)
           .setOnClick(this.onClickForward.bind(this))
           .build();
-        btn.draw();
         return btn;
       }
 
@@ -136,7 +137,6 @@ export class ChromeDrawingBoardMenu extends DrawingBoardMenu {
             }
           })
           .build();
-        btn.draw();
         return btn;
       }
 
@@ -144,7 +144,6 @@ export class ChromeDrawingBoardMenu extends DrawingBoardMenu {
         const btn = new DrawingBoardMenuBtn.Builder(this, "Pipette", type)
           .setOnClick(this.onClickPipette.bind(this))
           .build();
-        btn.draw();
         return btn;
       }
 
@@ -152,13 +151,11 @@ export class ChromeDrawingBoardMenu extends DrawingBoardMenu {
         const btn = new DrawingBoardMenuBtn.Builder(this, "Eraser", type)
           .setOnClick(this.onClickEraser.bind(this))
           .build();
-        btn.draw();
         return btn;
       }
 
       case "pen": {
         const btn = new DrawingBoardMenuBtn.Builder(this, "Pen", type).setOnClick(this.onClickPen.bind(this)).build();
-        btn.draw();
         return btn;
       }
 
@@ -166,13 +163,11 @@ export class ChromeDrawingBoardMenu extends DrawingBoardMenu {
         const btn = new DrawingBoardMenuBtn.Builder(this, "Circle", type)
           .setOnClick(this.onClickCircle.bind(this))
           .build();
-        btn.draw();
         return btn;
       }
 
       case "rectangle": {
         const btn = new DrawingBoardMenuBtn.Builder(this, "Rectangle", type).setOnClick(this.onClickRectangle).build();
-        btn.draw();
         return btn;
       }
 
@@ -191,7 +186,6 @@ export class ChromeDrawingBoardMenu extends DrawingBoardMenu {
             },
           })
           .build();
-        btn.draw();
         return btn;
       }
     }
