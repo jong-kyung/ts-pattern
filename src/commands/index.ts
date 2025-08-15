@@ -1,6 +1,30 @@
 import type { DrawingBoard } from "../DrawingBoard";
 import type { DrawingBoardHistory } from "../DrawingBoardHistory";
 
+export class Invoker {
+  private readonly command: { run(): void };
+
+  constructor(command: { run(): void }) {
+    this.command = command;
+  }
+
+  invoke() {
+    this.command.run();
+  }
+}
+
+// 어댑터 패턴
+export class Adapter {
+  private readonly command: Command;
+  constructor(command: Command) {
+    this.command = command;
+  }
+  run() {
+    this.command.execute();
+  }
+}
+// new Invoker(new Adapter(new BackCommand({} as any)));
+
 // 커맨드 패턴, 다양한 명령을 하나의 객체로 통합
 export abstract class Command {
   abstract execute(): void;
