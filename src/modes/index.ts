@@ -1,4 +1,13 @@
-import { Command, EraserSelectCommand, PenSelectCommand, PipetteSelectCommand, SaveHistoryCommand } from "../commands";
+import {
+  CircleSelectCommand,
+  Command,
+  EraserSelectCommand,
+  PenSelectCommand,
+  PipetteSelectCommand,
+  PremiumCommandProxy,
+  RectangleSelectCommand,
+  SaveHistoryCommand,
+} from "../commands";
 import type { DrawingBoard } from "../DrawingBoard";
 
 const convertToHex = (color: number) => {
@@ -114,6 +123,11 @@ export class PipetteMode extends Mode {
 }
 
 export class RectangleMode extends Mode {
+  constructor(drawingBoard: DrawingBoard) {
+    super(drawingBoard);
+    drawingBoard.menu.executeCommand(new PremiumCommandProxy(new RectangleSelectCommand(drawingBoard)));
+  }
+
   override mousedown(e: MouseEvent): void {
     this.drawingBoard.active = true;
   }
@@ -131,6 +145,11 @@ export class RectangleMode extends Mode {
 }
 
 export class CircleMode extends Mode {
+  constructor(drawingBoard: DrawingBoard) {
+    super(drawingBoard);
+    drawingBoard.menu.executeCommand(new PremiumCommandProxy(new CircleSelectCommand(drawingBoard)));
+  }
+
   override mousedown(e: MouseEvent): void {
     this.drawingBoard.active = true;
   }

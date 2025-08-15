@@ -20,6 +20,7 @@ export abstract class DrawingBoard {
   mode!: Mode;
   color: string;
   active: boolean;
+  isPremium = false;
   saveStrategy!: () => void;
   saveSetting = {
     blur: false,

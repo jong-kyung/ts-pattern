@@ -160,8 +160,34 @@ export class EraserSelectCommand extends Command {
   }
 }
 
-export class CircleSelectCommand extends Command {
+interface SelectCommand {
+  name: string;
+  drawingBoard: DrawingBoard;
+  execute(): void;
+}
+
+// 프록시 패턴 : 클라이언트와 실제 객체 사이에 대리자를 두어 접근을 제어하는 패턴
+export class PremiumCommandProxy {
+  name: string;
+  command: SelectCommand;
+
+  constructor(command: SelectCommand) {
+    this.command = command;
+    this.name = command.name;
+  }
+
+  execute(): void {
+    if (this.command.drawingBoard.isPremium) {
+      this.command.execute();
+    } else {
+      alert("프리미엄 이용자만 사용 가능한 기능입니다.");
+    }
+  }
+}
+
+export class CircleSelectCommand extends Command implements SelectCommand {
   name = "circleSelect";
+  loaded = true;
   drawingBoard: DrawingBoard;
 
   constructor(drawingBoard: DrawingBoard) {
@@ -169,12 +195,17 @@ export class CircleSelectCommand extends Command {
     this.drawingBoard = drawingBoard;
   }
 
+  load() {
+    // 무거운 작업
+    this.loaded = true;
+  }
+
   override execute(): void {
     this.drawingBoard.menu.setActiveButton("circle");
   }
 }
 
-export class RectangleSelectCommand extends Command {
+export class RectangleSelectCommand extends Command implements SelectCommand {
   name = "rectangleSelect";
   drawingBoard: DrawingBoard;
 
