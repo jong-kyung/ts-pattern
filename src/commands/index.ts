@@ -75,6 +75,31 @@ class ExecuteCounter extends CommandDecorator {
   additional() {}
 }
 
+// mixin 패턴 :  클래스를 상속받아 기존 기능을 확장하는 패턴
+function counterMixin(value: typeof BackCommand, context: ClassDecoratorContext) {
+  return class extends value {
+    override execute() {
+      super.execute();
+      if (counter[this.name]) {
+        counter[this.name]++;
+      } else {
+        counter[this.name] = 1;
+      }
+    }
+  };
+}
+
+function loggerMixin(value: typeof BackCommand, context: ClassDecoratorContext) {
+  return class extends value {
+    override execute() {
+      super.execute();
+      console.log(this.name + " 명령을 실행합니다.");
+    }
+  };
+}
+
+@counterMixin
+@loggerMixin
 export class BackCommand extends Command {
   name = "back";
   history: DrawingBoardHistory;
