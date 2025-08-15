@@ -27,6 +27,7 @@ export class Adapter {
 
 // 커맨드 패턴, 다양한 명령을 하나의 객체로 통합
 export abstract class Command {
+  abstract name: string;
   abstract execute(): void;
 }
 export class ForwardCommand extends Command {
@@ -44,6 +45,36 @@ export class ForwardCommand extends Command {
   }
 }
 
+export const counter: { [key: string]: number } = {};
+
+// 데코레이터 패턴
+class CommandDecorator {
+  command: Command;
+  name: string;
+  constructor(command: Command) {
+    this.command = command;
+    this.name = this.command.name;
+  }
+}
+class ExecuteLogger extends CommandDecorator {
+  execute() {
+    console.log(this.command.name + " 명령을 실행합니다.");
+    this.command.execute();
+  }
+  showLogger() {}
+}
+class ExecuteCounter extends CommandDecorator {
+  execute() {
+    this.command.execute();
+    if (counter[this.command.name]) {
+      counter[this.command.name]++;
+    } else {
+      counter[this.command.name] = 1;
+    }
+  }
+  additional() {}
+}
+
 export class BackCommand extends Command {
   name = "back";
   history: DrawingBoardHistory;
@@ -58,6 +89,9 @@ export class BackCommand extends Command {
     this.history.undo(); // receiver에게 로직 전송
   }
 }
+
+new ExecuteCounter(new BackCommand({} as any));
+new ExecuteLogger(new BackCommand({} as any));
 
 export class PenSelectCommand extends Command {
   name = "penSelect";
