@@ -123,6 +123,12 @@ export class PipetteMode extends Mode {
 }
 
 export class RectangleMode extends Mode {
+  startX?: number;
+  startY?: number;
+  endX?: number;
+  endY?: number;
+  imageData?: ImageData;
+
   constructor(drawingBoard: DrawingBoard) {
     super(drawingBoard);
     drawingBoard.menu.executeCommand(new PremiumCommandProxy(new RectangleSelectCommand(drawingBoard)));
@@ -130,21 +136,58 @@ export class RectangleMode extends Mode {
 
   override mousedown(e: MouseEvent): void {
     this.drawingBoard.active = true;
+    this.startX = e.offsetX;
+    this.startY = e.offsetY;
+    this.imageData = this.drawingBoard.ctx.getImageData(0, 0, 300, 300);
   }
 
   override mousemove(e: MouseEvent): void {
-    // Rectangle mode mouse move logic
+    this.endX = e.offsetX;
+    this.endY = e.offsetY;
+
+    // reset canvas
+    if (this.imageData) {
+      this.drawingBoard.ctx.putImageData(this.imageData, 0, 0);
+    }
+    this.drawingBoard.ctx.lineWidth = 1;
+    this.drawingBoard.ctx.lineCap = "round";
+    this.drawingBoard.ctx.strokeStyle = this.drawingBoard.color;
+    this.drawingBoard.ctx.globalCompositeOperation = "source-over";
+    const width = this.endX - this.startX!;
+    const height = this.endY - this.startY!;
+    this.drawingBoard.ctx.beginPath();
+    this.drawingBoard.ctx.rect(this.startX!, this.startY!, width, height);
+    this.drawingBoard.ctx.stroke();
   }
 
   override mouseup(e: MouseEvent): void {
     if (this.drawingBoard.active) {
+      this.drawingBoard.ctx.lineWidth = 1;
+      this.drawingBoard.ctx.lineCap = "round";
+      this.drawingBoard.ctx.strokeStyle = this.drawingBoard.color;
+      this.drawingBoard.ctx.globalCompositeOperation = "source-over";
+      const width = this.endX! - this.startX!;
+      const height = this.endY! - this.startY!;
+      this.drawingBoard.ctx.beginPath();
+      this.drawingBoard.ctx.rect(this.startX!, this.startY!, width, height);
+      this.drawingBoard.ctx.stroke();
+
       this.invoke(new SaveHistoryCommand(this.drawingBoard));
+      this.startX = undefined;
+      this.startY = undefined;
+      this.imageData = undefined;
     }
     this.drawingBoard.active = false;
   }
 }
 
 export class CircleMode extends Mode {
+  startX?: number;
+  startY?: number;
+  endX?: number;
+  endY?: number;
+  imageData?: ImageData;
+
   constructor(drawingBoard: DrawingBoard) {
     super(drawingBoard);
     drawingBoard.menu.executeCommand(new PremiumCommandProxy(new CircleSelectCommand(drawingBoard)));
@@ -152,15 +195,48 @@ export class CircleMode extends Mode {
 
   override mousedown(e: MouseEvent): void {
     this.drawingBoard.active = true;
+    this.startX = e.offsetX;
+    this.startY = e.offsetY;
+    this.imageData = this.drawingBoard.ctx.getImageData(0, 0, 300, 300);
   }
 
   override mousemove(e: MouseEvent): void {
-    // Circle mode mouse move logic
+    this.endX = e.offsetX;
+    this.endY = e.offsetY;
+
+    // reset canvas
+    if (this.imageData) {
+      this.drawingBoard.ctx.putImageData(this.imageData, 0, 0);
+    }
+    this.drawingBoard.ctx.lineWidth = 1;
+    this.drawingBoard.ctx.lineCap = "round";
+    this.drawingBoard.ctx.strokeStyle = this.drawingBoard.color;
+    this.drawingBoard.ctx.globalCompositeOperation = "source-over";
+    const width = this.endX - this.startX!;
+    const height = this.endY - this.startY!;
+    const radius = Math.hypot(width, height);
+    this.drawingBoard.ctx.beginPath();
+    this.drawingBoard.ctx.arc(this.startX!, this.startY!, radius, 0, Math.PI * 2);
+    this.drawingBoard.ctx.stroke();
   }
 
   override mouseup(e: MouseEvent): void {
     if (this.drawingBoard.active) {
+      this.drawingBoard.ctx.lineWidth = 1;
+      this.drawingBoard.ctx.lineCap = "round";
+      this.drawingBoard.ctx.strokeStyle = this.drawingBoard.color;
+      this.drawingBoard.ctx.globalCompositeOperation = "source-over";
+      const width = this.endX! - this.startX!;
+      const height = this.endY! - this.startY!;
+      const radius = Math.hypot(width, height);
+      this.drawingBoard.ctx.beginPath();
+      this.drawingBoard.ctx.arc(this.startX!, this.startY!, radius, 0, Math.PI * 2);
+      this.drawingBoard.ctx.stroke();
+
       this.invoke(new SaveHistoryCommand(this.drawingBoard));
+      this.startX = undefined;
+      this.startY = undefined;
+      this.imageData = undefined;
     }
     this.drawingBoard.active = false;
   }
